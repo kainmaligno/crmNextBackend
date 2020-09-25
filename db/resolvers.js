@@ -1,7 +1,7 @@
 const Usuario = require("../models/Usuario");
 const Producto = require("../models/Producto");
 const Cliente = require("../models/Cliente");
-const Pedido = require('../models/Pedido');
+const Pedido = require("../models/Pedido");
 const bcryptjs = require("bcryptjs");
 require("dotenv").config({ path: ".env" });
 const jwt = require("jsonwebtoken");
@@ -21,9 +21,13 @@ const crearToken = (usuario, secreta, expiresIn) => {
 
 const resolvers = {
   Query: {
+    /* version para probar sin frontend 
     obtenerUsuario: async (_, { token }) => {
       const usuarioId = await jwt.verify(token, process.env.SECRETA);
       return usuarioId;
+    }, */
+    obtenerUsuario: async (_, {}, ctx) => {
+      return ctx.usuario;
     },
     obtenerProductos: async () => {
       try {
@@ -78,7 +82,9 @@ const resolvers = {
     },
     obtenerPedidosVendedor: async (_, {}, ctx) => {
       try {
-        const pedidos = await Pedido.find({ vendedor: ctx.usuario.id });
+        const pedidos = await Pedido.find({
+          vendedor: ctx.usuario.id,
+        }).populate("cliente");
         return pedidos;
       } catch (error) {
         console.log(error);
@@ -142,10 +148,12 @@ const resolvers = {
       ]);
       return vendedores;
     },
-    buscarProducto: async (_, {texto})=>{
-      const productos = await Producto.find({$text:{$search:texto}}).limit(10)
-      return productos
-    }
+    buscarProducto: async (_, { texto }) => {
+      const productos = await Producto.find({
+        $text: { $search: texto },
+      }).limit(10);
+      return productos;
+    },
   },
   Mutation: {
     nuevoUsuario: async (_, { input }) => {
